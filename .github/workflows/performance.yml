@@ -1,0 +1,89 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run JMH Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build benchmarks
+      run: mvn -B clean package -DskipTests --file pom.xml
+
+    - name: Run benchmarks
+      run: |
+        java -jar target/benchmarks.jar || true
+      continue-on-error: true
+
+    - name: Upload benchmark results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: |
+          jmh-result.json
+          jmh-result.txt
+        retention-days: 90
+
+    - name: Store benchmark result
+      if: github.ref == 'refs/heads/main'
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'jmh'
+        output-file-path: jmh-result.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+        alert-threshold: '150%'
+        comment-on-alert: true
+        fail-on-alert: false
+
+  stress-test:
+    name: Stress Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build project
+      run: mvn -B clean package -DskipTests --file pom.xml
+
+    - name: Run stress tests
+      run: |
+        mvn -B test -Dtest=*StressTest --file pom.xml || true
+      continue-on-error: true
+
+    - name: Upload stress test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: stress-test-results
+        path: target/surefire-reports/
+        retention-days: 30

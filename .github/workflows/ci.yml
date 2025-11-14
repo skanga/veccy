@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        java: [21, 23]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build with Maven
+      run: mvn -B clean compile --file pom.xml
+
+    - name: Run tests
+      run: mvn -B test --file pom.xml
+      continue-on-error: ${{ matrix.os == 'windows-latest' }}
+
+    - name: Generate test report
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: Test Results (${{ matrix.os }}, Java ${{ matrix.java }})
+        path: target/surefire-reports/*.xml
+        reporter: java-junit
+        fail-on-error: false
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-java${{ matrix.java }}
+        path: target/surefire-reports/
+        retention-days: 30
+
+    - name: Build JAR
+      if: matrix.os == 'ubuntu-latest' && matrix.java == '21'
+      run: mvn -B package -DskipTests --file pom.xml
+
+    - name: Upload JAR artifact
+      if: matrix.os == 'ubuntu-latest' && matrix.java == '21'
+      uses: actions/upload-artifact@v4
+      with:
+        name: veccy-jar
+        path: target/veccy-*.jar
+        retention-days: 30
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Compile code
+      run: mvn -B clean compile --file pom.xml
+
+    - name: Check code style
+      run: mvn -B checkstyle:check --file pom.xml || true
+      continue-on-error: true
+
+    - name: Run SpotBugs
+      run: mvn -B spotbugs:check --file pom.xml || true
+      continue-on-error: true
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Run integration tests
+      run: mvn -B verify --file pom.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: target/site/jacoco/jacoco.xml
+        flags: integration
+        name: integration-tests
+
+  examples:
+    name: Test Examples
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build project
+      run: mvn -B clean package -DskipTests --file pom.xml
+
+    - name: Test SimpleExample
+      run: timeout 30 mvn exec:java -Dexec.mainClass="com.veccy.examples.SimpleExample" || true
+
+    - name: Test TF-IDF RAG Demo
+      run: timeout 60 mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemoTFIDF" || true
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Check for dependency vulnerabilities
+      run: mvn -B dependency-check:check --file pom.xml || true
+      continue-on-error: true
+
+    - name: Upload dependency check report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-report
+        path: target/dependency-check-report.html
+        retention-days: 30

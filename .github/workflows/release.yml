@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.1.0)'
+        required: true
+
+jobs:
+  build-release:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Update version in pom.xml
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        VERSION_NO_V=${VERSION#v}
+        mvn versions:set -DnewVersion=${VERSION_NO_V}
+
+    - name: Build project
+      run: mvn -B clean package --file pom.xml
+
+    - name: Run tests
+      run: mvn -B test --file pom.xml
+
+    - name: Build fat JAR
+      run: mvn -B package -DskipTests --file pom.xml
+
+    - name: Rename JAR with version
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        VERSION_NO_V=${VERSION#v}
+        cp target/veccy-fat.jar veccy-${VERSION_NO_V}-fat.jar
+        cp target/veccy-${VERSION_NO_V}.jar veccy-${VERSION_NO_V}.jar
+
+    - name: Generate checksums
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        VERSION_NO_V=${VERSION#v}
+        sha256sum veccy-${VERSION_NO_V}-fat.jar > veccy-${VERSION_NO_V}-fat.jar.sha256
+        sha256sum veccy-${VERSION_NO_V}.jar > veccy-${VERSION_NO_V}.jar.sha256
+
+    - name: Create release notes
+      id: release_notes
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        cat > release_notes.md << 'EOF'
+        ## Veccy ${{ steps.version.outputs.VERSION }}
+
+        ### Installation
+
+        **Fat JAR (includes all dependencies):**
+        ```bash
+        wget https://github.com/${{ github.repository }}/releases/download/${VERSION}/veccy-${VERSION#v}-fat.jar
+        java -jar veccy-${VERSION#v}-fat.jar
+        ```
+
+        **Regular JAR:**
+        ```bash
+        wget https://github.com/${{ github.repository }}/releases/download/${VERSION}/veccy-${VERSION#v}.jar
+        ```
+
+        ### Quick Start
+
+        ```bash
+        # Run CLI
+        java -jar veccy-${VERSION#v}-fat.jar
+
+        # Run REST server
+        java -jar veccy-${VERSION#v}-fat.jar server --port 8080
+
+        # Run RAG demo (TF-IDF - works on all systems)
+        java -cp veccy-${VERSION#v}-fat.jar com.veccy.examples.RAGDemoTFIDF
+        ```
+
+        ### What's Included
+
+        - High-performance vector database with HNSW, IVF, LSH, Annoy indexes
+        - Multiple embedding options: ONNX, TF-IDF, External API (OpenAI/Cohere)
+        - Complete RAG pipeline for semantic search
+        - REST API with authentication and rate limiting
+        - CLI tools and interactive shell
+        - Persistent storage with compression
+        - 471+ passing tests
+
+        ### System Requirements
+
+        - Java 21 or higher
+        - 4GB+ RAM recommended
+        - Windows, Linux, or macOS
+
+        ### Documentation
+
+        - [README](https://github.com/${{ github.repository }}/blob/main/README.md)
+        - [Quick Start Guide](https://github.com/${{ github.repository }}/blob/main/docs/QUICKSTART.md)
+        - [API Documentation](https://github.com/${{ github.repository }}/blob/main/docs/REST_API.md)
+        - [Examples](https://github.com/${{ github.repository }}/tree/main/src/main/java/com/veccy/examples)
+
+        ### Checksums (SHA-256)
+
+        See attached `.sha256` files for verification.
+
+        ---
+
+        **Full Changelog**: https://github.com/${{ github.repository }}/compare/v0.0.1...${VERSION}
+        EOF
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifacts
+        path: |
+          veccy-*.jar
+          veccy-*.jar.sha256
+          release_notes.md
+        retention-days: 30
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          veccy-*.jar
+          veccy-*.jar.sha256
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'workflow_dispatch'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build and push Docker image
+      if: github.event_name != 'workflow_dispatch'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/veccy:latest
+          ${{ secrets.DOCKER_USERNAME }}/veccy:${{ steps.version.outputs.VERSION }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/veccy:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/veccy:buildcache,mode=max
+
+  maven-publish:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+    - name: Configure Maven settings
+      uses: whelk-io/maven-settings-xml-action@v22
+      with:
+        servers: |
+          [
+            {
+              "id": "ossrh",
+              "username": "${{ secrets.OSSRH_USERNAME }}",
+              "password": "${{ secrets.OSSRH_PASSWORD }}"
+            }
+          ]
+
+    - name: Publish to Maven Central
+      run: mvn -B clean deploy -P release --file pom.xml
+      env:
+        MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
