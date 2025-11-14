@@ -74,11 +74,11 @@ Technical/historical docs moved to [archive/](archive/) folder
 
 ### Create a Database
 ```java
-VectorDB db = VectorDBFactory.createInMemoryHNSW(
-    768,  // dimensions
-    16,   // M parameter
-    200   // efConstruction
-);
+import com.veccy.client.VectorDBClient;
+import com.veccy.factory.VectorDBFactory;
+
+VectorDBClient db = VectorDBFactory.createHighPerformance();
+db.initialize();
 ```
 
 ### Insert Vectors
@@ -153,11 +153,21 @@ curl -X GET http://localhost:7878/api/v1/databases/my_db/vectors/search \
 
 ### Hybrid Storage Configuration
 ```java
-VectorDB db = VectorDBFactory.createHybridHNSW(
-    768,         // dimensions
-    "./data",    // disk path
-    512          // cache size MB
+import com.veccy.client.VectorDBClient;
+import com.veccy.factory.VectorDBFactory;
+import java.util.Map;
+
+Map<String, Object> storageConfig = Map.of(
+    "type", "hybrid",
+    "data_dir", "./data",
+    "cache_size", 512
 );
+Map<String, Object> indexConfig = Map.of(
+    "type", "hnsw",
+    "metric", "cosine"
+);
+VectorDBClient db = VectorDBFactory.createCustom(storageConfig, indexConfig, null, null);
+db.initialize();
 ```
 
 ---
@@ -283,25 +293,45 @@ See **[Batch Operations Guide](BATCH_OPERATIONS.md)**
 ### 3. Tune HNSW Parameters
 ```java
 // Balanced (default)
-VectorDB db = VectorDBFactory.createInMemoryHNSW(768, 16, 200);
+VectorDBClient db = VectorDBFactory.createHighPerformance();
 
-// High accuracy (slower)
-VectorDB db = VectorDBFactory.createInMemoryHNSW(768, 32, 400);
+// High accuracy (slower) - use custom config
+Map<String, Object> indexConfig = Map.of(
+    "type", "hnsw",
+    "m", 32,
+    "ef_construction", 400,
+    "metric", "cosine"
+);
+VectorDBClient dbHighAccuracy = VectorDBFactory.createCustom(
+    Map.of("type", "memory"), indexConfig, null, null);
 
 // High speed (lower accuracy)
-VectorDB db = VectorDBFactory.createInMemoryHNSW(768, 8, 100);
+Map<String, Object> indexConfigFast = Map.of(
+    "type", "hnsw",
+    "m", 8,
+    "ef_construction", 100,
+    "metric", "cosine"
+);
+VectorDBClient dbFast = VectorDBFactory.createCustom(
+    Map.of("type", "memory"), indexConfigFast, null, null);
 ```
 
 ### 4. Use Hybrid Storage
 ```java
 // Best of both worlds: fast cache + persistence
-VectorDB db = VectorDBFactory.createHybridHNSW(768, "./data", 512);
+Map<String, Object> storageConfig = Map.of(
+    "type", "hybrid",
+    "data_dir", "./data",
+    "cache_size", 512
+);
+Map<String, Object> indexConfig = Map.of("type", "hnsw", "metric", "cosine");
+VectorDBClient db = VectorDBFactory.createCustom(storageConfig, indexConfig, null, null);
 ```
 
 ### 5. Enable Compression (for large datasets)
 ```java
 // 8x-128x space reduction with minimal accuracy loss
-VectorDB db = VectorDBFactory.createCompressedHNSW(768);
+VectorDBClient db = VectorDBFactory.createMemoryOptimized(8); // 8-bit quantization
 ```
 
 ---

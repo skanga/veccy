@@ -64,8 +64,7 @@ public class QuickStart {
 
         try {
             // Create vector database (high performance HNSW index)
-            VectorDB db = VectorDBFactory.createHighPerformance();
-            db.initialize();
+            VectorDBClient db = VectorDBFactory.createHighPerformance();
 
             try {
                 // Sample documents
@@ -263,7 +262,7 @@ python export_model.py all-MiniLM-L6-v2
 
 ```java
 import com.veccy.base.SearchResult;
-import com.veccy.base.VectorDB;
+import com.veccy.client.VectorDBClient;
 import com.veccy.factory.VectorDBFactory;
 import com.veccy.processing.embeddings.ONNXEmbeddingProcessor;
 
@@ -278,8 +277,7 @@ public class SemanticSearch {
         embedder.initialize(config);
 
         // Create database
-        VectorDB db = VectorDBFactory.createHighPerformance();
-        db.initialize();
+        VectorDBClient db = VectorDBFactory.createHighPerformance();
 
         try {
             // Knowledge base
@@ -357,8 +355,7 @@ public class DocumentPipeline {
         );
 
         // Create database
-        VectorDB db = VectorDBFactory.createHighPerformance();
-        db.initialize();
+        VectorDBClient db = VectorDBFactory.createHighPerformance();
 
         try {
             // Process documents
@@ -413,7 +410,14 @@ config.put("model_path", "./models/paraphrase-MiniLM-L3-v2.onnx");
 config.put("max_length", 64);  // Shorter sequences
 
 // Use HNSW with lower parameters
-VectorDB db = VectorDBFactory.createInMemoryHNSW(384, 8, 100);
+Map<String, Object> indexConfig = Map.of(
+    "type", "hnsw",
+    "m", 8,
+    "ef_construction", 100,
+    "metric", "cosine"
+);
+VectorDBClient db = VectorDBFactory.createCustom(
+    Map.of("type", "memory"), indexConfig, null, null);
 ```
 
 **For Accuracy:**
@@ -423,19 +427,27 @@ config.put("model_path", "./models/all-mpnet-base-v2.onnx");
 config.put("max_length", 384);
 
 // Use HNSW with higher parameters
-// Use custom config for high accuracy with higher dimensions
-Map<String, Object> storageConfig = new HashMap<>();
-MemoryStorage storage = new MemoryStorage(storageConfig);
-HNSWConfig hnswConfig = HNSWConfig.builder()
-    .m(32).efConstruction(400).efSearch(100).metric(Metric.COSINE).build();
-HNSWIndex index = new HNSWIndex(hnswConfig);
-VectorDB db = new VectorDBClient(storage, index);
+Map<String, Object> indexConfig = Map.of(
+    "type", "hnsw",
+    "m", 32,
+    "ef_construction", 400,
+    "ef_search", 100,
+    "metric", "cosine"
+);
+Map<String, Object> storageConfig = Map.of("type", "memory");
+VectorDBClient db = VectorDBFactory.createCustom(storageConfig, indexConfig, null, null);
 ```
 
 **For Large Scale:**
 ```java
 // Use hybrid storage for persistence
-VectorDB db = VectorDBFactory.createHybridHNSW(384, "./data", 512);
+Map<String, Object> storageConfig = Map.of(
+    "type", "hybrid",
+    "data_dir", "./data",
+    "cache_size", 512
+);
+Map<String, Object> indexConfig = Map.of("type", "hnsw", "metric", "cosine");
+VectorDBClient db = VectorDBFactory.createCustom(storageConfig, indexConfig, null, null);
 
 // Use batch operations
 double[][] embeddings = embedder.embedBatch(Arrays.asList(texts));

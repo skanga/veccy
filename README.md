@@ -113,15 +113,11 @@ curl -X GET http://localhost:7878/api/v1/databases/my_vectors/vectors/search \
 
 ```java
 import com.veccy.factory.VectorDBFactory;
-import com.veccy.base.VectorDB;
+import com.veccy.client.VectorDBClient;
 import com.veccy.base.SearchResult;
 
-// Create database
-VectorDB db = VectorDBFactory.createInMemoryHNSW(
-    768,  // dimensions
-    16,   // M (HNSW parameter)
-    200   // efConstruction
-);
+// Create database (returns VectorDBClient, not VectorDB)
+VectorDBClient db = VectorDBFactory.createHighPerformance();
 
 // Insert vectors
 double[][] vectors = {
@@ -378,7 +374,7 @@ mvn jacoco:report
 // Embed documents with sentence-transformers
 // Store embeddings in Veccy
 // Search with query embedding
-VectorDB db = VectorDBFactory.createInMemoryHNSW(768);
+VectorDBClient db = VectorDBFactory.createHighPerformance();
 db.insert(documentEmbeddings, documentMetadata);
 List<SearchResult> results = db.search(queryEmbedding, 10);
 ```
@@ -386,8 +382,8 @@ List<SearchResult> results = db.search(queryEmbedding, 10);
 ### Image Similarity
 ```java
 // Extract image features with ResNet/CLIP
-// Index in Veccy
-VectorDB db = VectorDBFactory.createDiskHNSW(2048, "./images");
+// Index in Veccy with persistent storage
+VectorDBClient db = VectorDBFactory.createPersistent("./images", true);
 db.insert(imageFeatures, imageMetadata);
 ```
 
@@ -395,7 +391,16 @@ db.insert(imageFeatures, imageMetadata);
 ```java
 // User/item embeddings
 // Find similar users or items
-VectorDB db = VectorDBFactory.createHybridHNSW(128, "./recs", 512);
+Map<String, Object> storageConfig = Map.of(
+    "type", "hybrid",
+    "data_dir", "./recs",
+    "cache_size", 512
+);
+Map<String, Object> indexConfig = Map.of(
+    "type", "hnsw",
+    "metric", "cosine"
+);
+VectorDBClient db = VectorDBFactory.createCustom(storageConfig, indexConfig, null, null);
 List<SearchResult> similar = db.search(userEmbedding, 20);
 ```
 
@@ -403,6 +408,8 @@ List<SearchResult> similar = db.search(userEmbedding, 20);
 ```java
 // Normal behavior embeddings
 // Detect outliers with distance threshold
+VectorDBClient db = VectorDBFactory.createSimple();
+db.insert(normalBehaviorEmbeddings, null);
 List<SearchResult> nearest = db.search(newSample, 1);
 if (nearest.get(0).getDistance() > THRESHOLD) {
     // Anomaly detected
