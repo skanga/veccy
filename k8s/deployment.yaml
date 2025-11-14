@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: veccy
+  labels:
+    app: veccy
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: veccy
+  template:
+    metadata:
+      labels:
+        app: veccy
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: veccy
+        image: veccy:latest
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: health
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 8081
+          protocol: TCP
+
+        env:
+        - name: JAVA_OPTS
+          value: "-Xmx4g -Xms1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+        - name: VECCY_DATA_DIR
+          value: "/data"
+        - name: VECCY_LOG_DIR
+          value: "/logs"
+        - name: VECCY_HEALTH_PORT
+          value: "8080"
+        - name: VECCY_METRICS_PORT
+          value: "8081"
+
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "6Gi"
+            cpu: "2000m"
+
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: logs
+          mountPath: /logs
+
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: veccy-data-pvc
+      - name: logs
+        emptyDir: {}
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - veccy
+              topologyKey: kubernetes.io/hostname

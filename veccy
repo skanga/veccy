@@ -1,0 +1,29 @@
+#!/bin/bash
+# Veccy CLI launcher for Unix/Linux/macOS
+
+# Find Java
+if [ -n "$JAVA_HOME" ]; then
+    JAVA_CMD="$JAVA_HOME/bin/java"
+else
+    JAVA_CMD="java"
+fi
+
+# Get the directory where this script is located
+VECCY_HOME="$(cd "$(dirname "$0")" && pwd)"
+
+# Find the fat JAR
+FAT_JAR=$(find "$VECCY_HOME/target" -name "veccy-*-fat.jar" 2>/dev/null | head -1)
+
+if [ -z "$FAT_JAR" ]; then
+    echo "Error: Fat JAR not found. Please build the project first:"
+    echo "  mvn clean package"
+    exit 1
+fi
+
+# Set default JVM options if not set
+if [ -z "$JAVA_OPTS" ]; then
+    JAVA_OPTS="-Xmx2g -Xms512m"
+fi
+
+# Run the CLI using the fat JAR
+exec "$JAVA_CMD" $JAVA_OPTS -jar "$FAT_JAR" "$@"

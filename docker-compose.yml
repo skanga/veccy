@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Veccy vector database server
+  veccy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veccy-server
+    ports:
+      - "8080:8080"  # Health endpoint
+      - "8081:8081"  # Metrics endpoint
+    environment:
+      - JAVA_OPTS=-Xmx4g -Xms1g
+      - VECCY_DATA_DIR=/data
+      - VECCY_LOG_DIR=/logs
+      - VECCY_HEALTH_PORT=8080
+      - VECCY_METRICS_PORT=8081
+    volumes:
+      - veccy-data:/data
+      - veccy-logs:/logs
+    networks:
+      - veccy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Prometheus for metrics collection (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veccy-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - veccy-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veccy-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - veccy-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+volumes:
+  veccy-data:
+    driver: local
+  veccy-logs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  veccy-network:
+    driver: bridge

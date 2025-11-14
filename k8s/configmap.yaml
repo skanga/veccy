@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veccy-config
+  labels:
+    app: veccy
+data:
+  # Java options
+  JAVA_OPTS: "-Xmx4g -Xms1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+  # Veccy application settings
+  VECCY_DATA_DIR: "/data"
+  VECCY_LOG_DIR: "/logs"
+  VECCY_HEALTH_PORT: "8080"
+  VECCY_METRICS_PORT: "8081"
+
+  # Performance tuning
+  VECCY_INDEX_TYPE: "hnsw"
+  VECCY_METRIC: "cosine"
+
+  # Logging configuration
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veccy-hnsw-config
+  labels:
+    app: veccy
+    config-type: index
+data:
+  # HNSW Index configuration
+  HNSW_M: "16"
+  HNSW_EF_CONSTRUCTION: "200"
+  HNSW_EF_SEARCH: "50"
+  HNSW_MAX_NEIGHBORS: "32"
+  HNSW_LEVEL_MULTIPLIER: "0.5"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veccy-ivf-config
+  labels:
+    app: veccy
+    config-type: index
+data:
+  # IVF Index configuration
+  IVF_NUM_CLUSTERS: "100"
+  IVF_NUM_PROBES: "10"
+  IVF_MAX_ITERATIONS: "100"
+  IVF_CONVERGENCE_THRESHOLD: "0.0001"

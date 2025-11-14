@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: veccy-data-pvc
+  labels:
+    app: veccy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard  # Update based on your cluster's storage classes
+  volumeMode: Filesystem
+
+---
+# Optional: For multi-node scenarios, you may want separate PVCs
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: veccy-data-pvc-0
+#   labels:
+#     app: veccy
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Gi
+#   storageClassName: fast-ssd
+#   volumeMode: Filesystem

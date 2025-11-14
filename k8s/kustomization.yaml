@@ -1,0 +1,64 @@
+# Kustomization file for managing Veccy Kubernetes resources
+# Usage: kubectl apply -k k8s/
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: veccy
+  app.kubernetes.io/component: vector-database
+  app.kubernetes.io/managed-by: kustomize
+
+# Common annotations
+commonAnnotations:
+  documentation: "https://github.com/your-org/veccy"
+  version: "1.0.0"
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - persistentvolumeclaim.yaml
+  - configmap.yaml
+  - hpa.yaml
+  - ingress.yaml
+  - servicemonitor.yaml
+  - networkpolicy.yaml
+  - poddisruptionbudget.yaml
+
+# ConfigMap generator (alternative to configmap.yaml)
+# configMapGenerator:
+#   - name: veccy-config
+#     literals:
+#       - JAVA_OPTS=-Xmx4g -Xms1g
+#       - VECCY_DATA_DIR=/data
+#       - VECCY_LOG_DIR=/logs
+
+# Secret generator for sensitive data
+# secretGenerator:
+#   - name: veccy-secrets
+#     literals:
+#       - api-key=your-secret-key
+
+# Images to use (for version management)
+images:
+  - name: veccy
+    newName: veccy
+    newTag: latest
+
+# Patches for environment-specific overrides
+# patchesStrategicMerge:
+#   - overlays/production/deployment-patch.yaml
+
+# JSON patches for fine-grained modifications
+# patchesJson6902:
+#   - target:
+#       version: v1
+#       kind: Deployment
+#       name: veccy
+#     patch: |-
+#       - op: replace
+#         path: /spec/replicas
+#         value: 5

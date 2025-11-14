@@ -1,0 +1,41 @@
+version: '3.8'
+
+# Development docker-compose configuration
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+services:
+  veccy-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: veccy-dev
+    ports:
+      - "8080:8080"  # Health endpoint
+      - "8081:8081"  # Metrics endpoint
+      - "5005:5005"  # Java debugger
+    environment:
+      - JAVA_OPTS=-Xmx2g -Xms512m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - VECCY_DATA_DIR=/data
+      - VECCY_LOG_DIR=/logs
+    volumes:
+      # Mount source for hot reload
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+      # Persistent data
+      - veccy-dev-data:/data
+      - veccy-dev-logs:/logs
+      # Maven cache
+      - maven-cache:/root/.m2
+    networks:
+      - veccy-dev-network
+    stdin_open: true
+    tty: true
+
+volumes:
+  veccy-dev-data:
+  veccy-dev-logs:
+  maven-cache:
+
+networks:
+  veccy-dev-network:
+    driver: bridge

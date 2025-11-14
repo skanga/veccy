@@ -1,0 +1,26 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: veccy-pdb
+  labels:
+    app: veccy
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: veccy
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+
+---
+# Alternative: Use maxUnavailable instead
+# apiVersion: policy/v1
+# kind: PodDisruptionBudget
+# metadata:
+#   name: veccy-pdb
+#   labels:
+#     app: veccy
+# spec:
+#   maxUnavailable: 1
+#   selector:
+#     matchLabels:
+#       app: veccy
