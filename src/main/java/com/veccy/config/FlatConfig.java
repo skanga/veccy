@@ -10,6 +10,8 @@ import com.veccy.exceptions.ConfigurationException;
  * <p>
  * Parameters:
  * - metric: Distance metric to use (default: COSINE)
+ *
+ * @param metric distance metric to use
  */
 public record FlatConfig(
         Metric metric

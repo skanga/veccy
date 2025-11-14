@@ -16,6 +16,12 @@ import java.util.Optional;
  * - maxLeafSize: Maximum vectors per leaf node (default: 10, range: 1-1000)
  * - searchK: Number of nodes to search (default: -1 = auto, range: -1 or >= 1)
  * - randomSeed: Optional seed for deterministic tree construction
+ *
+ * @param metric distance metric to use
+ * @param numTrees number of trees in the forest (1-1000)
+ * @param maxLeafSize maximum vectors per leaf node (1-1000)
+ * @param searchK number of nodes to search (-1 for auto, or &gt;= 1)
+ * @param randomSeed optional seed for deterministic tree construction
  */
 public record AnnoyConfig(
         Metric metric,

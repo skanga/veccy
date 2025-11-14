@@ -13,6 +13,12 @@ import java.util.Optional;
  * - efSearch: Dynamic candidate list size during search (default: 50, range: 10-1000)
  * - metric: Distance metric to use
  * - randomSeed: Optional seed for deterministic behavior
+ *
+ * @param m number of bidirectional links per node (2-100)
+ * @param efConstruction dynamic candidate list size during construction (10-1000)
+ * @param efSearch dynamic candidate list size during search (10-1000)
+ * @param metric distance metric to use
+ * @param randomSeed optional seed for deterministic behavior
  */
 public record HNSWConfig(
         int m,

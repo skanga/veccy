@@ -317,7 +317,9 @@ public class VectorHandler {
 
     /**
      * List vectors (with pagination).
-     * GET /api/v1/databases/:name/vectors?page=1&pageSize=20
+     * GET /api/v1/databases/:name/vectors?page=1&amp;pageSize=20
+     *
+     * @param ctx the Javalin context
      */
     public void listVectors(Context ctx) {
         String dbName = ctx.pathParam("name");

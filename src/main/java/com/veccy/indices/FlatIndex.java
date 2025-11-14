@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <p>
  * This index performs exhaustive search over all vectors, making it
  * accurate but potentially slow for large datasets. It's suitable for
- * small to medium-sized collections (<10,000 vectors).
+ * small to medium-sized collections (&lt;10,000 vectors).
  * <p>
  * Example usage:
  * <pre>{@code

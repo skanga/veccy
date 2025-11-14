@@ -135,7 +135,9 @@ public class DatabaseHandler {
 
     /**
      * List all databases with pagination support.
-     * GET /api/v1/databases?page=1&pageSize=20
+     * GET /api/v1/databases?page=1&amp;pageSize=20
+     *
+     * @param ctx the Javalin context
      */
     public void listDatabases(Context ctx) {
         // Parse pagination parameters

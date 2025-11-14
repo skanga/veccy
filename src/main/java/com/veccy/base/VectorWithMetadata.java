@@ -5,6 +5,10 @@ import java.util.Objects;
 
 /**
  * Represents a vector with its associated metadata.
+ *
+ * @param id the unique identifier of the vector
+ * @param vector the vector data as double array
+ * @param metadata the associated metadata map
  */
 public record VectorWithMetadata(String id, double[] vector, Map<String, Object> metadata) {
 

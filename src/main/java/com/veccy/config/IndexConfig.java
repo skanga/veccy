@@ -9,8 +9,10 @@ import java.util.Map;
 public class IndexConfig {
 
     /**
-     * Flat index for small datasets (<10K vectors).
+     * Flat index for small datasets (&lt;10K vectors).
      * Provides exact search with 100% accuracy.
+     *
+     * @return configuration map for flat index
      */
     public static Map<String, Object> forSmallDataset() {
         Map<String, Object> config = new HashMap<>();

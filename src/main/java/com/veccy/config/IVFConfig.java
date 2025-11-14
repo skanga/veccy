@@ -17,6 +17,13 @@ import java.util.Optional;
  * - maxIterations: Maximum K-means iterations (default: 100, range: 1-1000)
  * - convergenceThreshold: K-means convergence threshold (default: 0.001, range: 0.0-1.0)
  * - randomSeed: Optional seed for deterministic K-means initialization
+ *
+ * @param metric distance metric to use
+ * @param numClusters number of K-means clusters (1-10000)
+ * @param numProbes number of clusters to probe during search (1-numClusters)
+ * @param maxIterations maximum K-means iterations (1-1000)
+ * @param convergenceThreshold K-means convergence threshold (0.0-1.0)
+ * @param randomSeed optional seed for deterministic K-means initialization
  */
 public record IVFConfig(
         Metric metric,

@@ -427,5 +427,5 @@ spec:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/your-org/veccy/issues
-- Documentation: https://github.com/your-org/veccy/docs
+- GitHub Issues: https://github.com/skanga/veccy/issues
+- Documentation: https://github.com/skanga/veccy/docs

@@ -5,6 +5,10 @@ import java.util.Objects;
 
 /**
  * Represents a search result containing vector ID, distance, and metadata.
+ *
+ * @param id the unique identifier of the vector
+ * @param distance the distance/similarity score
+ * @param metadata the associated metadata map
  */
 public record SearchResult(String id, double distance, Map<String, Object> metadata) {
 

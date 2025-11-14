@@ -16,6 +16,12 @@ import java.util.Optional;
  * - numHashBits: Number of hash bits per table (default: 8, range: 1-32)
  * - bucketWidth: Width for p-stable hashing (default: 4.0, range: 0.1-100.0)
  * - randomSeed: Optional seed for deterministic hash function generation
+ *
+ * @param metric distance metric to use
+ * @param numTables number of hash tables (1-50)
+ * @param numHashBits number of hash bits per table (1-32)
+ * @param bucketWidth width for p-stable hashing (0.1-100.0)
+ * @param randomSeed optional seed for deterministic hash function generation
  */
 public record LSHConfig(
         Metric metric,

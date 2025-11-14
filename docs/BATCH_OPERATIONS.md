@@ -725,5 +725,5 @@ public class OptimizedHNSWIndex extends HNSWIndex {
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/your-org/veccy/issues
+- GitHub Issues: https://github.com/skanga/veccy/issues
 - Example Code: [BatchOperationsExample.java](../src/main/java/com/veccy/examples/BatchOperationsExample.java)

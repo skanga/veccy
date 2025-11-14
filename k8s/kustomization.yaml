@@ -14,7 +14,7 @@ commonLabels:
 
 # Common annotations
 commonAnnotations:
-  documentation: "https://github.com/your-org/veccy"
+  documentation: "https://github.com/skanga/veccy"
   version: "1.0.0"
 
 resources:

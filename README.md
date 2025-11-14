@@ -3,8 +3,8 @@
 A production-ready vector database implementation in Java 21+ with multiple indexing strategies, flexible storage backends, and enterprise-grade REST API.
 
 [![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.java.net/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-471%20Passing-success.svg)](pom.xml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-1737%20Passing-success.svg)](pom.xml)
 
 ---
 
@@ -27,7 +27,7 @@ A production-ready vector database implementation in Java 21+ with multiple inde
 - **Standards**: API versioning, HTTPS/TLS support, proper error handling
 
 ### 📊 Performance
-- **471 passing tests** with comprehensive coverage
+- **1737 passing tests** with comprehensive coverage
 - **Sub-millisecond queries** on million-vector datasets
 - **Scalable architecture** supporting concurrent operations
 - **Memory efficient** with compression and hybrid storage

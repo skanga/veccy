@@ -798,6 +798,5 @@ services:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/your-org/veccy/issues
-- Documentation: https://github.com/your-org/veccy/docs
-- Docker Hub: https://hub.docker.com/r/your-org/veccy
+- GitHub Issues: https://github.com/skanga/veccy/issues
+- Documentation: https://github.com/skanga/veccy/docs

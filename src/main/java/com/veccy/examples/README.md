@@ -106,7 +106,7 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemo"
 
 ---
 
-### 7. **RAGDemoTFIDF.java** ⭐ WORKS ON ALL WINDOWS SYSTEMS!
+### 7. **RAGDemoTFIDF.java**
 RAG system using TF-IDF embeddings (no native libraries needed).
 
 ```bash
@@ -135,7 +135,7 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemoTFIDF"
 
 ---
 
-### 8. **EmbeddingComparison.java** ⭐ NEW!
+### 8. **EmbeddingComparison.java**
 Compare all three embedding processor types side-by-side.
 
 ```bash

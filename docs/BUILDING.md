@@ -12,7 +12,7 @@ Guide for building Veccy from source.
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/veccy.git
+git clone https://github.com/skanga/veccy.git
 cd veccy
 
 # Build with tests
