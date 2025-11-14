@@ -19,7 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
-        <onnx.version>1.16.3</onnx.version>
+        <onnx.version>1.23.2</onnx.version>
         <jackson.version>2.17.0</jackson.version>
         <pdfbox.version>3.0.6</pdfbox.version>
         <poi.version>5.4.1</poi.version>
