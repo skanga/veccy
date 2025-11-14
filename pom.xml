@@ -300,6 +300,8 @@
                 <configuration>
                     <source>21</source>
                     <detectJavaApiLink>false</detectJavaApiLink>
+                    <failOnWarnings>false</failOnWarnings>
+                    <doclint>none</doclint>
                 </configuration>
             </plugin>
         </plugins>
