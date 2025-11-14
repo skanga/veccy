@@ -1,0 +1,290 @@
+# Veccy .gitignore
+
+#######################
+# Java & Maven
+#######################
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+#######################
+# IDE Files
+#######################
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.idea_modules/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+.metadata
+.recommenders
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+#######################
+# Veccy Specific
+#######################
+
+# Vector database data directories
+data/
+*.veccy/
+
+# ONNX models (large files - should be downloaded separately)
+models/
+*.onnx
+
+# Exported data
+exports/
+backups/
+
+# Temporary vector files
+*.vec
+*.idx
+
+#######################
+# OS Files
+#######################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+#######################
+# Development & Testing
+#######################
+
+# Test output
+test-output/
+*.tmp
+*.temp
+
+# JUnit/TestNG
+*.xml
+!pom.xml
+
+# Coverage reports
+coverage/
+.coverage
+htmlcov/
+*.cover
+
+# JaCoCo
+*.exec
+
+# Benchmark results
+jmh-result.*
+
+# Dependency directories
+lib/
+libs/
+!scripts/requirements.txt
+
+#######################
+# Documentation Build
+#######################
+
+# Generated docs
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# Sphinx
+docs/.buildinfo
+docs/.doctrees
+
+#######################
+# Python (for scripts)
+#######################
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Python packages
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+#######################
+# Secrets & Credentials
+#######################
+
+# API keys and secrets
+.env
+.env.local
+.env.*.local
+secrets.properties
+credentials.json
+*.key
+*.pem
+
+# Configuration with sensitive data
+application-local.properties
+application-dev.properties
+*-secrets.yml
+*-secrets.yaml
+
+#######################
+# Logs & Debugging
+#######################
+
+# Application logs
+logs/
+*.log.*
+*.log.gz
+
+# Debug files
+hs_err_pid*
+replay_pid*
+
+# GC logs
+gc.log*
+
+# Heap dumps
+*.hprof
+
+#######################
+# Cache & Temp
+#######################
+
+# Spring Boot DevTools
+.spring-boot-devtools.properties
+
+# Gradle (if used)
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Cache directories
+.cache/
+*.cache
+
+# Temporary files
+tmp/
+temp/
+*.swp
+*.swo
+*~
+
+#######################
+# Docker
+#######################
+
+# Docker override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+#######################
+# CI/CD
+#######################
+
+# GitHub Actions
+# (keep .github/workflows/)
+
+# Jenkins
+.jenkins/
+
+#######################
+# Other
+#######################
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Core dumps
+core
+core.*
+
+# Lock files
+*.lock
+!pom.xml
+
+# Node (if any frontend tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Keep important files
+!.gitkeep
+!README.md
+!LICENSE
+!CONTRIBUTING.md
+
+#######################
+# End of .gitignore
+#######################
