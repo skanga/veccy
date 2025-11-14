@@ -54,7 +54,7 @@ jobs:
 
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-results-${{ matrix.os }}-java${{ matrix.java }}
         path: target/surefire-reports/
@@ -66,7 +66,7 @@ jobs:
 
     - name: Upload JAR artifact
       if: matrix.os == 'ubuntu-latest' && matrix.java == '21'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: veccy-jar
         path: target/veccy-*.jar
@@ -171,7 +171,7 @@ jobs:
 
     - name: Upload dependency check report
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: dependency-check-report
         path: target/dependency-check-report.html
