@@ -167,14 +167,15 @@ db.close();
 ## Architecture
 
 ### Index Types
+"Flat", "HNSW", "IVF", "LSH", and "Annoy" are different vector indexing methods used for efficient similarity search in large datasets (Approximate Nearest Neighbors, or ANN). They represent different trade-offs between speed, memory usage, and recall (accuracy).
 
-| Index | Use Case | Speed | Memory | Accuracy |
-|-------|----------|-------|--------|----------|
-| **Flat** | Small datasets (<10K) | Medium | Low | 100% |
-| **HNSW** | General purpose | Fast | High | 95-99% |
-| **IVF** | Large datasets (>1M) | Fast | Medium | 90-95% |
-| **LSH** | High dimensions | Very Fast | Low | 85-90% |
-| **Annoy** | Read-heavy workloads | Fast | Low | 90-95% |
+| Index | Approach | Use Case | Speed | Memory | Accuracy |
+|-------|----------|----------|-------|--------|----------|
+| **Flat** | Brute-force, compares every vector | Small datasets (<10K) | Medium | Low | 100% |
+| **HNSW** (Hierarchical Navigable Small World) | Graph-based, multi-layered structure for efficient traversal | General purpose | Fast | High | 95-99% |
+| **IVF** (Inverted File) | Clusters vectors using k-means, searches only relevant clusters | Large datasets (>1M) | Fast | Medium | 90-95% |
+| **LSH** (Locality-Sensitive Hashing) | Uses hash functions to map similar vectors to the same "buckets" | High dimensions | Very Fast | Low | 85-90% |
+| **Annoy** (Approximate Nearest Neighbors Oh Yeah) | Tree-based, builds a forest of random projection trees| Read-heavy workloads | Fast | Low | 90-95% |
 
 ### Storage Backends
 
@@ -185,11 +186,14 @@ db.close();
 | **Hybrid** | ✅ Durable | Balanced | Production, hot data |
 
 ### Distance Metrics
+Cosine, Euclidean, dot product, and Manhattan are all common metrics used to measure the similarity or distance between data points (often represented as vectors) in machine learning and data science
 
-- **Cosine Similarity** - Normalized vectors, text embeddings
-- **Euclidean (L2)** - Image embeddings, geometric data
-- **Dot Product** - Pre-normalized vectors
-- **Manhattan (L1)** - Sparse vectors, categorical data
+| Metric | Type | Description | Key Use Case  |
+| --- | --- | --- | --- |
+| **Cosine Similarity** | Similarity | Measures the cosine of the angle between two vectors, focusing solely on direction and ignoring magnitude. Ranges from -1 (opposite) to 1 (identical direction). | Semantic search and document comparison, where length differences (e.g., document size) shouldn't affect similarity.  |
+| **Euclidean Distance (L2)** | Distance | Measures the straight-line (as the crow flies) distance between two points using the Pythagorean theorem (L2 norm). Lower values mean more similar. | Image data and spatial analysis where absolute magnitude is important.  |
+| **Dot Product** | Similarity/Distance | An uncorrected cosine similarity that considers both the angle and magnitude of the vectors. Higher values mean more similar. | Ranking systems and recommendation engines; if vectors are normalized, it is equivalent to cosine similarity.  |
+| **Manhattan Distance (L1)** | Distance | Measures distance by summing the absolute differences of the coordinates (L1 norm), like navigating a grid-like city. Faster to calculate than Euclidean distance. | Grid-like feature spaces and scenarios where robustness to outliers is important.  |
 
 ---
 
