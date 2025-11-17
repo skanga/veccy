@@ -43,7 +43,7 @@
 
         <!-- Dependency versions -->
         <onnx.version>1.16.3</onnx.version>
-        <jackson.version>2.17.0</jackson.version>
+        <jackson.version>2.20.1</jackson.version>
         <pdfbox.version>3.0.6</pdfbox.version>
         <poi.version>5.4.1</poi.version>
         <jsoup.version>1.21.2</jsoup.version>
