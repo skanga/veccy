@@ -42,7 +42,16 @@ A high-performance vector database implementation in Java 21+ with multiple inde
 
 ### Installation
 
-#### Option 1: Download Pre-built JAR
+#### Option 1: Import as library JAR via Maven
+```bash
+<dependency>
+    <groupId>io.github.skanga</groupId>
+    <artifactId>veccy</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+#### Option 2: Download Pre-built JAR (to run an interactive CLI tool or as a standalone REST server)
 ```bash
 # Download from releases
 wget https://github.com/skanga/veccy/releases/latest/veccy-0.1-fat.jar
@@ -54,7 +63,7 @@ java -jar veccy-0.1-fat.jar help
 java -cp veccy-0.1-fat.jar com.veccy.rest.VeccyRestServer
 ```
 
-#### Option 2: Build from Source
+#### Option 3: Build from Source (to run an interactive CLI tool or as a standalone REST server)
 ```bash
 git clone https://github.com/skanga/veccy.git
 cd veccy
@@ -471,9 +480,3 @@ Built with:
 - [Maven](https://maven.apache.org/) - Build tool
 
 ---
-
-**Status**: ✅ Production Ready
-
-**Version**: 0.1
-
-**Last Updated**: 2025-11-12
