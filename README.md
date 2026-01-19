@@ -1,6 +1,6 @@
-# Veccy - High-Performance Vector Database for Java
+# Veccy - High-Performance Vector Database in pure Java
 
-A production-ready vector database implementation in Java 21+ with multiple indexing strategies, flexible storage backends, and enterprise-grade REST API.
+A high-performance vector database implementation in Java 21+ with multiple indexing strategies, flexible storage backends, and enterprise-grade REST API designed for production use.
 
 [![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
