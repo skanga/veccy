@@ -35,11 +35,72 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.FactoryExample"
 
 ---
 
-### 3. **BatchOperationsExample.java**
-Efficient batch processing of vectors.
+### 3. **TypeSafeConfigExample.java**
+Type-safe configuration examples for HNSW indexes.
+
+```bash
+mvn exec:java -Dexec.mainClass="com.veccy.examples.TypeSafeConfigExample"
+```
+
+**Features:**
+- Builder pattern configuration
+- Defaults and validation errors
+- Deterministic behavior via random seed
+- High-quality vs fast construction presets
+
+---
+
+### 4. **HealthCheckExample.java**
+Health checks, HTTP endpoints, and custom probes.
+
+```bash
+mvn exec:java -Dexec.mainClass="com.veccy.examples.HealthCheckExample"
+```
+
+**Features:**
+- Health manager checks for storage and index
+- Optional HTTP health endpoints (liveness/readiness/metrics)
+- Custom health check registration
+- Production configuration examples
+
+---
+
+### 5. **BatchOperationsExample.java**
+Batch insert, update, and search workflows.
 
 ```bash
 mvn exec:java -Dexec.mainClass="com.veccy.examples.BatchOperationsExample"
+```
+
+**Features:**
+- Bulk ingestion with batch insert
+- Batch updates for vectors and metadata
+- Batch search for recommendations
+- Throughput logging
+
+---
+
+### 6. **PaginationExample.java**
+Cursor-based pagination and streaming over vector IDs.
+
+```bash
+mvn exec:java -Dexec.mainClass="com.veccy.examples.PaginationExample"
+```
+
+**Features:**
+- Cursor-based pagination
+- Streaming API usage
+- Export by pages
+- Rate-limited batch processing
+- Pattern matching for IDs
+
+---
+
+### 7. **BatchPerformanceExample.java**
+Efficient batch processing of vectors.
+
+```bash
+mvn exec:java -Dexec.mainClass="com.veccy.examples.BatchPerformanceExample"
 ```
 
 **Features:**
@@ -49,7 +110,24 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.BatchOperationsExample"
 
 ---
 
-### 4. **SentenceTransformersExample.java**
+### 8. **ONNXQuickStart.java**
+Simple, minimal example for ONNX embeddings.
+
+```bash
+mvn exec:java -Dexec.mainClass="com.veccy.examples.ONNXQuickStart"
+```
+
+**Prerequisites:**
+- ONNX model: `./models/all-MiniLM-L6-v2-onnx/model.onnx`
+
+**Features:**
+- Quick start template
+- Step-by-step output
+- Semantic search demo
+
+---
+
+### 9. **SentenceTransformersExample.java**
 Comprehensive example using ONNX Sentence Transformers.
 
 ```bash
@@ -67,46 +145,29 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.SentenceTransformersExample"
 
 ---
 
-### 5. **ONNXQuickStart.java**
-Simple, minimal example for ONNX embeddings.
+### 10. **EmbeddingComparison.java**
+Compare all three embedding processor types side-by-side.
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.veccy.examples.ONNXQuickStart"
+mvn exec:java -Dexec.mainClass="com.veccy.examples.EmbeddingComparison"
 ```
 
 **Prerequisites:**
-- ONNX model: `./models/all-MiniLM-L6-v2-onnx/model.onnx`
+- Optional: ONNX model for neural embeddings
+- Optional: `OPENAI_API_KEY` environment variable for API demo
 
 **Features:**
-- Quick start template
-- Step-by-step output
-- Semantic search demo
+- ONNX embedding processor demo
+- External API embedding processor demo (OpenAI/Cohere)
+- TF-IDF embedding processor demo
+- Performance comparison
+- Similarity score comparison
+
+**Documentation:** See [EMBEDDING_OPTIONS.md](../../../docs/EMBEDDING_OPTIONS.md) for details.
 
 ---
 
-### 6. **RAGDemo.java** ⭐
-Complete Retrieval-Augmented Generation (RAG) system.
-
-```bash
-mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemo"
-```
-
-**Prerequisites:**
-- ONNX model: `./models/all-MiniLM-L6-v2.onnx`
-- Markdown files in `./docs/`
-
-**Features:**
-- Document processing pipeline
-- Persistent vector storage
-- Semantic document search
-- Question answering
-- Context retrieval for LLMs
-
-**Documentation:** See [RAG_DEMO.md](../../../docs/RAG_DEMO.md) for complete guide.
-
----
-
-### 7. **RAGDemoTFIDF.java**
+### 11. **RAGDemoTFIDF.java**
 RAG system using TF-IDF embeddings (no native libraries needed).
 
 ```bash
@@ -135,25 +196,25 @@ mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemoTFIDF"
 
 ---
 
-### 8. **EmbeddingComparison.java**
-Compare all three embedding processor types side-by-side.
+### 12. **RAGDemo.java** ⭐
+Complete Retrieval-Augmented Generation (RAG) system.
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.veccy.examples.EmbeddingComparison"
+mvn exec:java -Dexec.mainClass="com.veccy.examples.RAGDemo"
 ```
 
 **Prerequisites:**
-- Optional: ONNX model for neural embeddings
-- Optional: `OPENAI_API_KEY` environment variable for API demo
+- ONNX model: `./models/all-MiniLM-L6-v2.onnx`
+- Markdown files in `./docs/`
 
 **Features:**
-- ONNX embedding processor demo
-- External API embedding processor demo (OpenAI/Cohere)
-- TF-IDF embedding processor demo
-- Performance comparison
-- Similarity score comparison
+- Document processing pipeline
+- Persistent vector storage
+- Semantic document search
+- Question answering
+- Context retrieval for LLMs
 
-**Documentation:** See [EMBEDDING_OPTIONS.md](../../../docs/EMBEDDING_OPTIONS.md) for details.
+**Documentation:** See [RAG_DEMO.md](../../../docs/RAG_DEMO.md) for complete guide.
 
 ---
 

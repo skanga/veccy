@@ -2,358 +2,195 @@ package com.veccy.examples;
 
 import com.veccy.base.SearchResult;
 import com.veccy.client.VectorDBClient;
-import com.veccy.factory.VectorDBFactory;
+import com.veccy.config.HNSWConfig;
+import com.veccy.config.Metric;
+import com.veccy.indices.HNSWIndex;
+import com.veccy.storage.MemoryStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
- * Example demonstrating batch operations performance.
- * <p>
- * This example compares the performance of:
- * - Individual operations (multiple single calls)
- * - Batch operations (single call with multiple items)
- * <p>
- * Batch operations show significant performance improvements:
- * - Reduced locking overhead
- * - Better cache locality
- * - Shared computation
- * - Atomic state changes
+ * Example demonstrating batch operations for efficient multi-vector processing.
  */
 public class BatchOperationsExample {
 
-    private static final Random random = new Random(42);
-
     public static void main(String[] args) {
-        System.out.println("╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║  Veccy - Batch Operations Performance Example             ║");
-        System.out.println("╚════════════════════════════════════════════════════════════╝");
-        System.out.println();
+        // Initialize Veccy with HNSW index
+        HNSWConfig indexConfig = HNSWConfig.builder()
+                .m(16)
+                .efConstruction(200)
+                .metric(Metric.COSINE)
+                .build();
 
-        // Create database
-        VectorDBClient client = VectorDBFactory.createHighPerformance();
+        try (VectorDBClient client = new VectorDBClient(
+                new MemoryStorage(new HashMap<>()),
+                new HNSWIndex(indexConfig))) {
 
-        try {
+            client.initialize();
+
             int dimensions = 128;
-            int vectorCount = 1000;
-            int batchSize = 100;
 
-            System.out.printf("Setup: %d vectors, %d dimensions%n", vectorCount, dimensions);
-            System.out.printf("Batch size: %d%n", batchSize);
-            System.out.println();
+            // Example 1: Bulk data ingestion
+            System.out.println("=== Example 1: Bulk Data Ingestion ===");
+            bulkIngestion(client, dimensions);
 
-            // Insert initial vectors
-            System.out.println("Inserting " + vectorCount + " vectors...");
-            double[][] vectors = generateRandomVectors(vectorCount, dimensions);
-            List<String> ids = client.insert(vectors, null);
-            System.out.println("✓ Inserted " + ids.size() + " vectors");
-            System.out.println();
+            // Example 2: Batch update after reprocessing
+            System.out.println("\n=== Example 2: Batch Update ===");
+            batchUpdateExample(client, dimensions);
 
-            // Demo 1: Batch vs Individual Search
-            demonstrateBatchSearch(client, dimensions, batchSize);
-            System.out.println();
+            // Example 3: Batch search for recommendations
+            System.out.println("\n=== Example 3: Batch Search ===");
+            batchSearchExample(client, dimensions);
 
-            // Demo 2: Batch vs Individual Update
-            demonstrateBatchUpdate(client, ids, dimensions, batchSize);
-            System.out.println();
+            // Example 4: Metadata-only updates
+            System.out.println("\n=== Example 4: Metadata Updates ===");
+            metadataUpdateExample(client);
 
-            // Demo 3: Scaling Performance
-            demonstrateScaling(client, dimensions);
-            System.out.println();
-
-            // Demo 4: Real-world use cases
-            demonstrateUseCases(client, ids, dimensions);
-
-        } finally {
-            client.close();
-        }
-
-        System.out.println();
-        System.out.println("╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║  Example completed successfully!                          ║");
-        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        } // Automatically closed
     }
 
     /**
-     * Demonstrate batch search performance vs individual searches.
+     * Example 1: Bulk data ingestion with batch insert.
      */
-    private static void demonstrateBatchSearch(VectorDBClient client, int dimensions, int batchSize) {
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  DEMO 1: Batch Search Performance");
-        System.out.println("═══════════════════════════════════════════════════════════");
+    private static void bulkIngestion(VectorDBClient client, int dimensions) {
+        // Generate 1000 document embeddings
+        int documentCount = 1000;
+        double[][] documentVectors = new double[documentCount][dimensions];
+        List<Map<String, Object>> documentMetadata = new ArrayList<>();
 
-        double[][] queryVectors = generateRandomVectors(batchSize, dimensions);
-        int k = 10;
+        for (int i = 0; i < documentCount; i++) {
+            // Generate random embedding (in practice, use a real embedding model)
+            documentVectors[i] = generateRandomVector(dimensions);
 
-        // Individual searches
-        long startIndividual = System.nanoTime();
-        List<List<SearchResult>> individualResults = new ArrayList<>();
-        for (double[] queryVector : queryVectors) {
-            individualResults.add(client.search(queryVector, k));
+            // Add metadata
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("doc_id", "doc_" + i);
+            metadata.put("category", i % 5); // 5 categories
+            metadata.put("timestamp", System.currentTimeMillis());
+            documentMetadata.add(metadata);
         }
-        long endIndividual = System.nanoTime();
-        double individualTime = (endIndividual - startIndividual) / 1_000_000.0;
 
-        // Batch search
-        long startBatch = System.nanoTime();
-        List<List<SearchResult>> batchResults = client.batchSearch(queryVectors, k);
-        long endBatch = System.nanoTime();
-        double batchTime = (endBatch - startBatch) / 1_000_000.0;
+        // Insert all documents at once
+        long startTime = System.nanoTime();
+        List<String> ids = client.insert(documentVectors, documentMetadata);
+        long duration = (System.nanoTime() - startTime) / 1_000_000;
 
-        // Calculate improvement
-        double improvement = ((individualTime - batchTime) / individualTime) * 100;
-        double speedup = individualTime / batchTime;
-
-        System.out.println();
-        System.out.printf("Individual searches: %.2f ms (%d queries)%n", individualTime, batchSize);
-        System.out.printf("Batch search:        %.2f ms (%d queries)%n", batchTime, batchSize);
-        System.out.println();
-        System.out.printf("⚡ Speedup:    %.2fx faster%n", speedup);
-        System.out.printf("⚡ Improvement: %.1f%% reduction in time%n", improvement);
-        System.out.printf("   Per-query:   %.3f ms (individual) vs %.3f ms (batch)%n",
-                individualTime / batchSize, batchTime / batchSize);
+        System.out.println("Inserted " + ids.size() + " documents in " + duration + "ms");
+        System.out.println("Throughput: " + (documentCount * 1000 / duration) + " docs/sec");
     }
 
     /**
-     * Demonstrate batch update performance vs individual updates.
+     * Example 2: Batch update vectors after reprocessing.
      */
-    private static void demonstrateBatchUpdate(VectorDBClient client, List<String> ids,
-                                               int dimensions, int batchSize) {
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  DEMO 2: Batch Update Performance");
-        System.out.println("═══════════════════════════════════════════════════════════");
+    private static void batchUpdateExample(VectorDBClient client, int dimensions) {
+        // Get all vector IDs (in practice, query from database)
+        Map<String, Object> stats = client.getStats();
+        Map<?, ?> indexStats = (Map<?, ?>) stats.get("index");
+        int vectorCount = (int) indexStats.get("vector_count");
 
-        List<String> updateIds = ids.subList(0, batchSize);
+        // Simulate updating 100 vectors with new embeddings
+        int updateCount = Math.min(100, vectorCount);
+        List<String> idsToUpdate = new ArrayList<>();
         List<double[]> newVectors = new ArrayList<>();
-        List<Map<String, Object>> metadata = new ArrayList<>();
 
-        for (int i = 0; i < batchSize; i++) {
+        // In practice, these would be specific document IDs
+        for (int i = 0; i < updateCount; i++) {
+            idsToUpdate.add("doc_" + i); // Use actual IDs
             newVectors.add(generateRandomVector(dimensions));
-            metadata.add(Map.of("updated", true, "batch", i));
         }
-
-        // Individual updates
-        long startIndividual = System.nanoTime();
-        int successCount = 0;
-        for (int i = 0; i < batchSize; i++) {
-            if (client.update(updateIds.get(i), newVectors.get(i), metadata.get(i))) {
-                successCount++;
-            }
-        }
-        long endIndividual = System.nanoTime();
-        double individualTime = (endIndividual - startIndividual) / 1_000_000.0;
 
         // Batch update
-        long startBatch = System.nanoTime();
-        List<Boolean> results = client.batchUpdate(updateIds, newVectors, metadata);
-        long endBatch = System.nanoTime();
-        double batchTime = (endBatch - startBatch) / 1_000_000.0;
-        int batchSuccessCount = (int) results.stream().filter(b -> b).count();
+        long startTime = System.nanoTime();
+        List<Boolean> results = client.batchUpdate(idsToUpdate, newVectors, null);
+        long duration = (System.nanoTime() - startTime) / 1_000_000;
 
-        // Calculate improvement
-        double improvement = ((individualTime - batchTime) / individualTime) * 100;
-        double speedup = individualTime / batchTime;
+        // Check results
+        long successCount = results.stream().filter(r -> r).count();
+        long failureCount = results.stream().filter(r -> !r).count();
 
-        System.out.println();
-        System.out.printf("Individual updates: %.2f ms (%d updates, %d succeeded)%n",
-                individualTime, batchSize, successCount);
-        System.out.printf("Batch update:       %.2f ms (%d updates, %d succeeded)%n",
-                batchTime, batchSize, batchSuccessCount);
-        System.out.println();
-        System.out.printf("⚡ Speedup:    %.2fx faster%n", speedup);
-        System.out.printf("⚡ Improvement: %.1f%% reduction in time%n", improvement);
-        System.out.printf("   Per-update:  %.3f ms (individual) vs %.3f ms (batch)%n",
-                individualTime / batchSize, batchTime / batchSize);
+        System.out.println("Updated " + successCount + " vectors successfully in " + duration + "ms");
+        if (failureCount > 0) {
+            System.out.println("Failed to update " + failureCount + " vectors");
+        }
+        System.out.println("Throughput: " + (updateCount * 1000 / duration) + " updates/sec");
     }
 
     /**
-     * Demonstrate how performance scales with batch size.
+     * Example 3: Batch search for personalized recommendations.
      */
-    private static void demonstrateScaling(VectorDBClient client, int dimensions) {
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  DEMO 3: Scaling Analysis");
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println();
+    private static void batchSearchExample(VectorDBClient client, int dimensions) {
+        // Simulate 50 user queries
+        int userCount = 50;
+        double[][] userQueries = new double[userCount][dimensions];
 
-        int[] batchSizes = {1, 10, 50, 100, 250, 500};
-        int k = 10;
-
-        System.out.printf("%-15s %-20s %-20s %-15s%n", "Batch Size", "Individual (ms)", "Batch (ms)", "Speedup");
-        System.out.println("─".repeat(70));
-
-        for (int batchSize : batchSizes) {
-            double[][] queryVectors = generateRandomVectors(batchSize, dimensions);
-
-            // Individual
-            long startIndividual = System.nanoTime();
-            for (double[] queryVector : queryVectors) {
-                client.search(queryVector, k);
-            }
-            long endIndividual = System.nanoTime();
-            double individualTime = (endIndividual - startIndividual) / 1_000_000.0;
-
-            // Batch
-            long startBatch = System.nanoTime();
-            client.batchSearch(queryVectors, k);
-            long endBatch = System.nanoTime();
-            double batchTime = (endBatch - startBatch) / 1_000_000.0;
-
-            double speedup = individualTime / batchTime;
-
-            System.out.printf("%-15d %-20.2f %-20.2f %-15.2fx%n",
-                    batchSize, individualTime, batchTime, speedup);
+        for (int i = 0; i < userCount; i++) {
+            userQueries[i] = generateRandomVector(dimensions);
         }
 
-        System.out.println();
-        System.out.println("📊 Observation: Speedup increases with batch size due to:");
-        System.out.println("   • Reduced locking overhead");
-        System.out.println("   • Better CPU cache utilization");
-        System.out.println("   • Amortized initialization costs");
+        // Batch search
+        long startTime = System.nanoTime();
+        List<List<SearchResult>> allResults = client.batchSearch(userQueries, 10);
+        long duration = (System.nanoTime() - startTime) / 1_000_000;
+
+        System.out.println("Searched " + userCount + " queries in " + duration + "ms");
+        System.out.println("Throughput: " + (userCount * 1000 / duration) + " queries/sec");
+
+        // Process results
+        for (int i = 0; i < Math.min(3, allResults.size()); i++) {
+            List<SearchResult> userResults = allResults.get(i);
+            System.out.println("\nUser " + i + " recommendations:");
+            for (int j = 0; j < Math.min(3, userResults.size()); j++) {
+                SearchResult result = userResults.get(j);
+                System.out.println("  " + (j + 1) + ". " + result.id() +
+                        " (distance: " + String.format("%.4f", result.distance()) + ")");
+            }
+        }
     }
 
     /**
-     * Demonstrate real-world use cases for batch operations.
+     * Example 4: Update metadata without changing vectors.
      */
-    private static void demonstrateUseCases(VectorDBClient client, List<String> ids, int dimensions) {
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  DEMO 4: Real-World Use Cases");
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println();
+    private static void metadataUpdateExample(VectorDBClient client) {
+        // Update metadata for 10 documents (e.g., add tags, update timestamps)
+        List<String> idsToUpdate = new ArrayList<>();
+        List<Map<String, Object>> newMetadata = new ArrayList<>();
 
-        // Use Case 1: Batch similarity search for recommendation
-        System.out.println("📌 Use Case 1: Recommendation System");
-        System.out.println("   Scenario: Find similar items for multiple user queries");
-        System.out.println();
+        for (int i = 0; i < 10; i++) {
+            idsToUpdate.add("doc_" + i);
 
-        int numUsers = 20;
-        double[][] userQueries = generateRandomVectors(numUsers, dimensions);
-
-        long start = System.nanoTime();
-        List<List<SearchResult>> recommendations = client.batchSearch(userQueries, 5);
-        long end = System.nanoTime();
-        double time = (end - start) / 1_000_000.0;
-
-        System.out.printf("   Generated recommendations for %d users in %.2f ms%n", numUsers, time);
-        System.out.printf("   Average: %.2f ms per user%n", time / numUsers);
-        System.out.println();
-
-        // Use Case 2: Batch update for model retraining
-        System.out.println("📌 Use Case 2: Model Retraining");
-        System.out.println("   Scenario: Update embeddings after model retraining");
-        System.out.println();
-
-        int numToUpdate = 50;
-        List<String> updateIds = ids.subList(0, numToUpdate);
-        List<double[]> retrainedVectors = new ArrayList<>();
-        List<Map<String, Object>> retrainedMetadata = new ArrayList<>();
-
-        for (int i = 0; i < numToUpdate; i++) {
-            retrainedVectors.add(generateRandomVector(dimensions));
-            retrainedMetadata.add(Map.of(
-                    "model_version", "v2.0",
-                    "retrained_at", System.currentTimeMillis(),
-                    "confidence", 0.95 + random.nextDouble() * 0.05
-            ));
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("doc_id", "doc_" + i);
+            metadata.put("category", i % 5);
+            metadata.put("timestamp", System.currentTimeMillis());
+            metadata.put("updated", true);
+            metadata.put("tags", Arrays.asList("tag1", "tag2"));
+            newMetadata.add(metadata);
         }
 
-        start = System.nanoTime();
-        List<Boolean> results = client.batchUpdate(updateIds, retrainedVectors, retrainedMetadata);
-        end = System.nanoTime();
-        time = (end - start) / 1_000_000.0;
+        // Batch update (pass null for vectors to only update metadata)
+        List<Boolean> results = client.batchUpdate(idsToUpdate, null, newMetadata);
 
-        int successCount = (int) results.stream().filter(b -> b).count();
-
-        System.out.printf("   Updated %d/%d vectors in %.2f ms%n", successCount, numToUpdate, time);
-        System.out.printf("   Average: %.2f ms per update%n", time / numToUpdate);
-        System.out.println();
-
-        // Use Case 3: Multi-query semantic search
-        System.out.println("📌 Use Case 3: Multi-Query Semantic Search");
-        System.out.println("   Scenario: Search with multiple query variations");
-        System.out.println();
-
-        // Simulate query variations (e.g., rephrased queries, synonyms)
-        String[] queryTexts = {
-                "machine learning algorithms",
-                "AI classification methods",
-                "supervised learning techniques"
-        };
-
-        double[][] queryVariations = generateRandomVectors(queryTexts.length, dimensions);
-
-        start = System.nanoTime();
-        List<List<SearchResult>> multiQueryResults = client.batchSearch(queryVariations, 10);
-        end = System.nanoTime();
-        time = (end - start) / 1_000_000.0;
-
-        // Merge and deduplicate results (simplified)
-        Map<String, Double> mergedResults = new HashMap<>();
-        for (List<SearchResult> queryResults : multiQueryResults) {
-            for (SearchResult result : queryResults) {
-                mergedResults.merge(result.id(), result.distance(),
-                        (oldDist, newDist) -> Math.min(oldDist, newDist));
-            }
-        }
-
-        System.out.printf("   Searched %d query variations in %.2f ms%n", queryTexts.length, time);
-        System.out.printf("   Found %d unique results across all queries%n", mergedResults.size());
-        System.out.println();
-
-        // Performance Summary
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  💡 Key Takeaways");
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println();
-        System.out.println("1. Batch operations provide 1.5x-5x speedup over individual");
-        System.out.println("   operations, depending on batch size and workload.");
-        System.out.println();
-        System.out.println("2. Benefits increase with batch size due to reduced overhead");
-        System.out.println("   and better resource utilization.");
-        System.out.println();
-        System.out.println("3. Use batch operations when:");
-        System.out.println("   • Processing multiple queries simultaneously");
-        System.out.println("   • Bulk updating vectors after retraining");
-        System.out.println("   • Building recommendation systems");
-        System.out.println("   • Implementing multi-query search strategies");
-        System.out.println();
-        System.out.println("4. Trade-offs:");
-        System.out.println("   • Slightly higher memory usage (stores batch results)");
-        System.out.println("   • All-or-nothing execution (no partial streaming)");
-        System.out.println("   • Better suited for moderate batch sizes (10-500)");
+        long successCount = results.stream().filter(r -> r).count();
+        System.out.println("Updated metadata for " + successCount + " documents");
     }
 
-    // Utility methods
-
-    private static double[][] generateRandomVectors(int count, int dimensions) {
-        double[][] vectors = new double[count][dimensions];
-        for (int i = 0; i < count; i++) {
-            vectors[i] = generateRandomVector(dimensions);
-        }
-        return vectors;
-    }
-
+    /**
+     * Generate a random vector for testing purposes.
+     */
     private static double[] generateRandomVector(int dimensions) {
+        Random random = new Random();
         double[] vector = new double[dimensions];
         for (int i = 0; i < dimensions; i++) {
             vector[i] = random.nextGaussian();
         }
-        return normalize(vector);
-    }
-
-    private static double[] normalize(double[] vector) {
-        double norm = 0.0;
+        // Normalize
+        double norm = 0;
         for (double v : vector) {
             norm += v * v;
         }
         norm = Math.sqrt(norm);
-
-        if (norm > 0) {
-            for (int i = 0; i < vector.length; i++) {
-                vector[i] /= norm;
-            }
+        for (int i = 0; i < dimensions; i++) {
+            vector[i] /= norm;
         }
         return vector;
     }

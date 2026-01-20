@@ -491,4 +491,4 @@ src/main/java/com/veccy/examples/RAGDemo.java
 
 ## License
 
-This demo is part of the Veccy project and follows the same license terms.
+This demo is part of the Veccy project and follows the same Apache 2.0 license terms.

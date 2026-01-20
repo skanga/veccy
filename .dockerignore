@@ -1,0 +1,62 @@
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Test files
+test-output/
+*.test
+
+# Documentation (built separately)
+docs/_build/
+site/
+
+# Docker files (no nested builds)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Data directories
+data/
+db/
+storage/
+
+# Node modules (if any)
+node_modules/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
