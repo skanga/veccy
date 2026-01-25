@@ -7,6 +7,11 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     name: Build and Test
@@ -44,8 +49,9 @@ jobs:
       continue-on-error: ${{ matrix.os == 'windows-latest' }}
 
     - name: Generate test report
-      if: always()
+      if: success() || failure()
       uses: dorny/test-reporter@v1
+      continue-on-error: true
       with:
         name: Test Results (${{ matrix.os }}, Java ${{ matrix.java }})
         path: target/surefire-reports/*.xml

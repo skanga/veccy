@@ -50,12 +50,15 @@ jobs:
     - name: Build fat JAR
       run: mvn -B package -DskipTests --file pom.xml
 
-    - name: Rename JAR with version
+    - name: Prepare release JARs
       run: |
         VERSION=${{ steps.version.outputs.VERSION }}
         VERSION_NO_V=${VERSION#v}
-        cp target/veccy-fat.jar veccy-${VERSION_NO_V}-fat.jar
+        # Copy JARs with consistent naming (files already have correct names after version update)
+        cp target/veccy-${VERSION_NO_V}-fat.jar veccy-${VERSION_NO_V}-fat.jar
         cp target/veccy-${VERSION_NO_V}.jar veccy-${VERSION_NO_V}.jar
+        # List files for verification
+        ls -lh veccy-*.jar
 
     - name: Generate checksums
       run: |
